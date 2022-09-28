@@ -1,8 +1,9 @@
+import { EnfermeroDialogoComponent } from './enfermero-dialogo/enfermero-dialogo.component';
 import { Component, OnInit } from '@angular/core';
 import { Enfermero } from './../../../model/enfermero';
 import { EnfermeroService } from 'src/app/services/enfermero.service';
 import { MatTableDataSource } from '@angular/material/table'
-
+import { MatDialog } from '@angular/material/dialog';
 
 
 @Component({
@@ -12,14 +13,35 @@ import { MatTableDataSource } from '@angular/material/table'
 })
 export class EnfermeroListarComponent implements OnInit {
   dataSource: MatTableDataSource<Enfermero> = new MatTableDataSource();
-  displayedColumns:string[]=['id','name','dni', 'edad', 'numero', 'email', 'CIP'];
-  constructor(private eS: EnfermeroService) { }
+  displayedColumns:string[]=['id','name','dni', 'edad', 'numero', 'email', 'CIP', 'actualizar', 'eliminar'];
+  private idMayor: number = 0;
+  constructor(private eS: EnfermeroService, private dialog: MatDialog) { }
 
   ngOnInit(): void
   {
     this.eS.listar().subscribe(data=>{
         this.dataSource = new MatTableDataSource(data);
     })
+    this.eS.getLista().subscribe(data => {
+      this.dataSource = new MatTableDataSource(data);
+    });
+    this.eS.getConfirmaEliminacion().subscribe(data => {
+      data == true ? this.eliminar(this.idMayor) : false;
+    });
+  }
+  confirmar(id: number) {
+    this.idMayor = id;
+    this.dialog.open(EnfermeroDialogoComponent);
+  }
+
+
+  eliminar(id: number) {
+    this.eS.eliminar(id).subscribe(() => {
+      this.eS.listar().subscribe(data => {
+        this.eS.setLista(data);
+      });
+    });
+
   }
 
 }
